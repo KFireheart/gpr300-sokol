@@ -14,7 +14,10 @@
 
 
 struct {
-    float aplpha;
+    float shininess = 10.0f;
+    glm::vec3 diffuse = {0.5f, 0.5f, 0.5f};
+    glm::vec3 specular = {1.0f, 1.0f, 1.0f};
+    glm::vec3 ambient = {0.1f, 0.1f, 0.1f};
 }debug;
 
 Scene::Scene()
@@ -60,8 +63,14 @@ void Scene::Render(void)
     blinnphong->setMat4("view_proj", view_proj);
 
     blinnphong->setVec3("camera", camera.position);
-    blinnphong->setVec3("light", light.position);
-    blinnphong->setVec3("light_color", light.color);
+    blinnphong->setVec3("light.position", light.position);
+    blinnphong->setVec3("light.color", light.color);
+
+
+    blinnphong->setVec3("material.diffuse", debug.diffuse);
+    blinnphong->setVec3("material.specular", debug.specular);
+    blinnphong->setVec3("material.ambient", debug.ambient);
+    blinnphong->setFloat("material.shininess", debug.shininess);
 
 
     // draw suzanne
@@ -101,7 +110,10 @@ void Scene::Debug(void)
     ImGui::Checkbox("Paused", &time.paused);
     ImGui::SliderFloat("Time Factor", &time.factor, 0.0f, 10.0f);
     ImGui::ColorEdit3("Light Color", &light.color[0]);
-    //ImGui::SliderFloat2("Alpha", )
+    ImGui::SliderFloat("Shininess", &debug.shininess, 0.0f, 100.0f);
+    ImGui::DragFloat("Material Diffuse", &debug.diffuse.x, 0.01f, 0.0f, 1.0f);
+    ImGui::DragFloat("Material Specular", &debug.specular.x, 0.01f, 0.0f, 1.0f);
+    ImGui::DragFloat("Material Ambient", &debug.ambient.x, 0.01f, 0.0f, 1.0f);
 
     /* build debug ui here */
 

@@ -13,7 +13,7 @@ struct Material{
   vec3 ambient;
   vec3 diffuse;
   vec3 specular;
-  float shininness;
+  float shininess;
 };
 
 // varyings
@@ -36,16 +36,16 @@ vec3 blinnphong(vec3 normal, vec3 frag_position, Light light) {
   float NdotH = max(dot(normal, half_dir), 0.0);
 
   vec3 diffuse = NdotL * material.diffuse;
-  vec3 specular = pow(NdotH, material.shininness) * material.alpha;
-  vec3 lighting = vec3(diffuse) + vec3(specular);
+  float specular_factor = pow(NdotH, material.shininess);
+  vec3 specular = specular_factor * material.specular;
+  vec3 lighting = diffuse + specular;
 
   return lighting * light.color;
 }
 
 void main()
 {
-  vec3 lighting = blinnphong(vs_normal, vs_position, light) + ambient;
-  vec3 object_color = vs_normal.rgb * lighting;
-  vec3 final_color = object_color * lighting;
+  vec3 lighting = blinnphong(vs_normal, vs_position, light);
+  vec3 final_color = lighting + material.ambient;
   FragColor = vec4(final_color, 1.0);
 }

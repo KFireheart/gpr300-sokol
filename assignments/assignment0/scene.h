@@ -24,4 +24,5 @@ class Scene final : public batteries::Scene
     std::unique_ptr<ew::Shader> blinnphong;
 
     batteries::light_t light;
+
 };
