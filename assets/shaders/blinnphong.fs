@@ -1,6 +1,4 @@
-#version 410
-
-precision mediump float;
+#version 410 core
 
 out vec4 FragColor;
 
