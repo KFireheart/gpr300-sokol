@@ -22,13 +22,22 @@ struct {
 
 Scene::Scene()
 {
+
+
     suzanne = std::make_unique<ew::Model>("assets/models/suzanne.obj");
-    blinnphong = std::make_unique<ew::Shader>("assets/shaders/default.vs", "assets/shaders/blinnphong.fs");
+    toon = std::make_unique<ew::Shader>("assets/shaders/default.vs", "assets/shaders/toon.fs");
+    zatoon = std::make_unique<ew::Texture>("assets/textures/ZAtoon.png");
+
 
     light = { 
         .brightness = 1.0f,
         .color = {1.0f, 0.0f, 1.0f},
         .position = {2.0f, 2.0f, 2.0f},
+    };
+
+    palette = {
+        .color1 = {1.0f, 0.0f, 0.0f},
+        .color2 = {0.0f, 1.0f, 0.0f},
     };
 }
 
@@ -56,21 +65,33 @@ void Scene::Render(void)
     glEnable(GL_DEPTH_TEST);
     // glDisable(GL_DEPTH_TEST);
 
-    blinnphong->use();
+    auto index = 0;
+    glActiveTexture(GL_TEXTURE0 + index);
+    glBindTexture(GL_TEXTURE_2D, zatoon->getID());
+
+
+    toon->use();
 
     // scene matrices
-    blinnphong->setMat4("model", glm::mat4(1.0f));
-    blinnphong->setMat4("view_proj", view_proj);
+    toon->setMat4("model", glm::mat4(1.0f));
+    toon->setMat4("view_proj", view_proj);
 
-    blinnphong->setVec3("camera", camera.position);
-    blinnphong->setVec3("light.position", light.position);
-    blinnphong->setVec3("light.color", light.color);
+    toon->setVec3("camera", camera.position);
+    toon->setVec3("light.position", light.position);
+    toon->setVec3("light.color", light.color);
+
+    //set the tune texture
+    toon->setInt("zatoon", index);
 
 
-    blinnphong->setVec3("material.diffuse", debug.diffuse);
-    blinnphong->setVec3("material.specular", debug.specular);
-    blinnphong->setVec3("material.ambient", debug.ambient);
-    blinnphong->setFloat("material.shininess", debug.shininess);
+    toon->setVec3("material.diffuse", debug.diffuse);
+    toon->setVec3("material.specular", debug.specular);
+    toon->setVec3("material.ambient", debug.ambient);
+    toon->setFloat("material.shininess", debug.shininess);
+
+    toon->setVec3("pal.color1", palette.color1);
+    toon->setVec3("pal.color2", palette.color2);
+
 
 
     // draw suzanne
@@ -114,6 +135,10 @@ void Scene::Debug(void)
     ImGui::DragFloat("Material Diffuse", &debug.diffuse.x, 0.01f, 0.0f, 1.0f);
     ImGui::DragFloat("Material Specular", &debug.specular.x, 0.01f, 0.0f, 1.0f);
     ImGui::DragFloat("Material Ambient", &debug.ambient.x, 0.01f, 0.0f, 1.0f);
+
+    ImGui::SeparatorText("Palette");
+    ImGui::ColorEdit3("Color 1", &palette.color1[0]);
+    ImGui::ColorEdit3("Color 2", &palette.color2[0]);
 
     /* build debug ui here */
 
