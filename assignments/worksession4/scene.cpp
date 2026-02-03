@@ -39,10 +39,32 @@ Scene::Scene()
         .color1 = {1.0f, 0.0f, 0.0f},
         .color2 = {0.0f, 1.0f, 0.0f},
     };
+
+    glGenFramebuffers(1, &fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER,  fbo);
+    {
+
+        glGenTextures(1, &fbo_texture);
+        glBindTexture(GL_TEXTURE_2D, fbo_texture);
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, 800, 600, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fbo_texture, 0);
+
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+            printf("ERROR: Framebuffer is not complete\n");
+            return;
+        }
+    }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 Scene::~Scene()
 {
+    glDeleteFramebuffers(1, &fbo);
 }
 
 void Scene::Update(float dt)
@@ -57,6 +79,7 @@ void Scene::Render(void)
 {
     const auto view_proj = camera.Projection() * camera.View();
 
+
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -64,6 +87,8 @@ void Scene::Render(void)
     glCullFace(GL_BACK);
     glEnable(GL_DEPTH_TEST);
     // glDisable(GL_DEPTH_TEST);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
     auto index = 0;
     glActiveTexture(GL_TEXTURE0 + index);
@@ -96,6 +121,8 @@ void Scene::Render(void)
 
     // draw suzanne
     suzanne->draw();
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void Scene::Debug(void)
@@ -139,6 +166,11 @@ void Scene::Debug(void)
     ImGui::SeparatorText("Palette");
     ImGui::ColorEdit3("Color 1", &palette.color1[0]);
     ImGui::ColorEdit3("Color 2", &palette.color2[0]);
+
+    ImGui::Image(
+        (void*)(intptr_t)fbo_texture,
+        ImVec2(400, 300),
+        ImVec2(0, 1), ImVec2(1, 0));
 
     /* build debug ui here */
 

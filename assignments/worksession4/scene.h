@@ -1,5 +1,10 @@
 #pragma once
 
+#ifdef __APPLE__
+#  define GL_SILENCE_DEPRECATION
+#endif
+#include "batteries/opengl.h"
+
 // batteries
 #include "batteries/scene.h"
 #include "batteries/lights.h"
@@ -31,5 +36,8 @@ class Scene final : public batteries::Scene
       glm::vec3 color1;
       glm::vec3 color2;
     } palette;
+
+    GLuint fbo;
+    GLuint fbo_texture;
 
 };
