@@ -30,6 +30,9 @@ class Scene final : public batteries::Scene
     //std::unique_ptr<ew::Texture> bricks;
     std::unique_ptr<ew::Texture> zatoon;
 
+    //post processing
+    std::unique_ptr<ew::Shader> post_process;
+
     batteries::light_t light;
 
     struct {
@@ -39,5 +42,5 @@ class Scene final : public batteries::Scene
 
     GLuint fbo;
     GLuint fbo_texture;
-
+    GLuint fbo_depth_texture;
 };
