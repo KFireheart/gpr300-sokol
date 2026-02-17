@@ -23,6 +23,8 @@ uniform vec3 camera;
 uniform Light light;
 uniform Material material;
 
+uniform sampler2D bricks;
+
 vec3 blinnphong(vec3 normal, vec3 frag_position, Light light) {
 
   vec3 view_dir = normalize(camera - frag_position);
@@ -38,7 +40,8 @@ vec3 blinnphong(vec3 normal, vec3 frag_position, Light light) {
   vec3 specular = specular_factor * material.specular;
   vec3 lighting = diffuse + specular;
 
-  return lighting * light.color;
+  vec3 color = texture(bricks, vs_texcoord).rgb;
+  return color * lighting * light.color;
 }
 
 void main()

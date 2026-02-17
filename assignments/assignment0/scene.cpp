@@ -24,6 +24,8 @@ Scene::Scene()
 {
     suzanne = std::make_unique<ew::Model>("assets/models/suzanne.obj");
     blinnphong = std::make_unique<ew::Shader>("assets/shaders/default.vs", "assets/shaders/blinnphong.fs");
+    bricks = std::make_unique<ew::Texture>("assets/textures/bricks.png");
+
 
     light = { 
         .brightness = 1.0f,
@@ -56,6 +58,10 @@ void Scene::Render(void)
     glEnable(GL_DEPTH_TEST);
     // glDisable(GL_DEPTH_TEST);
 
+    auto index = 0;
+    glActiveTexture(GL_TEXTURE0 + index);
+    glBindTexture(GL_TEXTURE_2D, bricks->getID());
+
     blinnphong->use();
 
     // scene matrices
@@ -65,6 +71,8 @@ void Scene::Render(void)
     blinnphong->setVec3("camera", camera.position);
     blinnphong->setVec3("light.position", light.position);
     blinnphong->setVec3("light.color", light.color);
+
+    blinnphong->setInt("bricks", index);
 
 
     blinnphong->setVec3("material.diffuse", debug.diffuse);
