@@ -18,7 +18,7 @@ struct {
     glm::vec3 diffuse = {0.5f, 0.5f, 0.5f};
     glm::vec3 specular = {1.0f, 1.0f, 1.0f};
     glm::vec3 ambient = {0.1f, 0.1f, 0.1f};
-    float strength = 1.0f;
+    float blur_strength = 0.063f;
 } debug;
 
 struct FullScreenQuad {
@@ -195,7 +195,7 @@ void Scene::Render(void)
     post_process->use();
     post_process->setInt("the_screen", 0);
 
-    post_process->setFloat("strength", debug.strength);
+    post_process->setFloat("strength", debug.blur_strength);
 
     //set up the fullscreen pipeline
     glDisable(GL_DEPTH_TEST);
@@ -255,7 +255,7 @@ void Scene::Debug(void)
     ImGui::ColorEdit3("Color 2", &palette.color2[0]);
 
     ImGui::SeparatorText("post processing");
-    ImGui::SliderFloat("blur strength", &debug.strength, 0.0f, 10.0f);
+    ImGui::SliderFloat("blur strength", &debug.blur_strength, 0.0f, 10.0f);
 
     ImGui::Image(
         (void*)(intptr_t)fbo_texture,
