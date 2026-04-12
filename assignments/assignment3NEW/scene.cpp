@@ -16,6 +16,12 @@ constexpr int kFramebufferHeight = 600;
 constexpr float orbit_radius = 2.0f;
 constexpr glm::vec4 light_orbit_radius = {2.0f, 4.0f, -4.0f, 1.0f};
 
+struct
+{
+    glm::vec3 color = {0.145f, 0.265f, 0.417f};
+    float intensity = 8.7f;
+} light_control;
+
 struct FullscreenQuad
 {
     GLuint vao;
@@ -36,18 +42,13 @@ struct FullscreenQuad
         };
         // clang-format on
 
-        // initialize fullscreen quad, buffer object
         glGenVertexArrays(1, &vao);
         glGenBuffers(1, &vbo);
 
-        // bind vao, and vbo
         glBindVertexArray(vao);
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
-
-        // buffer data to vbo
         glBufferData(GL_ARRAY_BUFFER, sizeof(quad_vertices), &quad_vertices, GL_STATIC_DRAW);
 
-        // positions and texcoords
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
         glEnableVertexAttribArray(1);
@@ -68,14 +69,13 @@ struct Framebuffer
 
     void Initialize()
     {
-        // initialize framebuffer
         glGenFramebuffers(1, &fbo);
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
         // position attachment
         glGenTextures(1, &position);
         glBindTexture(GL_TEXTURE_2D, position);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, kFramebufferWidth, kFramebufferHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, kFramebufferWidth, kFramebufferHeight, 0, GL_RGBA, GL_FLOAT, nullptr);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, position, 0);
@@ -83,7 +83,7 @@ struct Framebuffer
         // normal attachment
         glGenTextures(1, &normal);
         glBindTexture(GL_TEXTURE_2D, normal);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, kFramebufferWidth, kFramebufferHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, kFramebufferWidth, kFramebufferHeight, 0, GL_RGBA, GL_FLOAT, nullptr);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, normal, 0);
@@ -95,7 +95,7 @@ struct Framebuffer
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, albedo, 0);
-        
+
         // material attachment
         glGenTextures(1, &material);
         glBindTexture(GL_TEXTURE_2D, material);
@@ -104,7 +104,7 @@ struct Framebuffer
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, material, 0);
 
-        // depth attatchment
+        // depth attachment
         glGenTextures(1, &depth);
         glBindTexture(GL_TEXTURE_2D, depth);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, kFramebufferWidth, kFramebufferHeight, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, nullptr);
@@ -115,10 +115,9 @@ struct Framebuffer
         GLenum array[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3};
         glDrawBuffers(4, array);
 
-        // check completeness
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
-            printf("Not so victorious\n");
+            printf("G-buffer framebuffer not complete\n");
         }
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -133,21 +132,16 @@ struct LighVolumebuffer
 
     void Initialize()
     {
-        // initialize framebuffer
         glGenFramebuffers(1, &fbo);
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
-        // position attachment
-        // depth attachment
-        // material attachment
         glGenTextures(1, &color);
         glBindTexture(GL_TEXTURE_2D, color);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, kFramebufferWidth, kFramebufferHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, kFramebufferWidth, kFramebufferHeight, 0, GL_RGBA, GL_FLOAT, nullptr);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, color, 0);
 
-        // depth attatchment
         glGenTextures(1, &depth);
         glBindTexture(GL_TEXTURE_2D, depth);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, kFramebufferWidth, kFramebufferHeight, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, nullptr);
@@ -155,10 +149,9 @@ struct LighVolumebuffer
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, depth, 0);
 
-        // check completeness
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
-            printf("Not so victorious\n");
+            printf("Light volume framebuffer not complete\n");
         }
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -167,10 +160,10 @@ struct LighVolumebuffer
 
 struct Material
 {
-    float ambient = 1.0f;
-    float diffuse = 0.5f;
-    float specular = 0.5f;
-    float shininess = 0.5f;
+    float ambient = 0.167f;
+    float diffuse = 0.292f;
+    float specular = 0.187f;
+    float shininess = 0.099f;
 } material;
 
 struct
@@ -187,7 +180,7 @@ Scene::Scene()
     blinnphong = std::make_unique<ew::Shader>("assets/shaders/deferred/blinnphong.vs", "assets/shaders/deferred/blinnphong.fs");
     noprocess = std::make_unique<ew::Shader>("assets/shaders/fullscreen.vs", "assets/shaders/fullscreen.fs");
     lightsphere = std::make_unique<ew::Shader>("assets/shaders/deferred/light.vs", "assets/shaders/deferred/light.fs");
-    
+
     sphere.load(ew::createSphere(1.0f, 8));
 
     ambient = {
@@ -221,13 +214,11 @@ void Scene::InitializeInstanceData(void)
             const auto position = glm::vec3(x * 3.0f, 0, y * 3.0f);
             const auto orbit = batteries::random_point_on_sphere();
 
-            // light instances
             light_instances[i] = {
                 .color = batteries::random_color(),
-                .position = glm::vec4(position, 1.0f) + orbit  * orbit_radius,
+                .position = glm::vec4(position, 1.0f) + orbit * orbit_radius,
             };
 
-            // model instances
             model_instances[i] = batteries::random_model_matrix(position);
         }
     }
@@ -242,9 +233,10 @@ void Scene::Render(void)
 {
     const auto view_proj = camera.Projection() * camera.View();
 
-    // render gbuffer
+   
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.fbo);
     {
+        glViewport(0, 0, kFramebufferWidth, kFramebufferHeight);
         glDisable(GL_BLEND);
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_CULL_FACE);
@@ -266,27 +258,24 @@ void Scene::Render(void)
             for (auto y = -debug.width; y <= debug.width; y++, i++)
             {
                 geometry->setMat4("model", model_instances[i]);
-
-                // Draw the object
                 suzanne->draw();
             }
         }
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    // render volume lights
+    
     glBindFramebuffer(GL_FRAMEBUFFER, lightvolumebuffer.fbo);
     {
-        glDisable(GL_BLEND);
-        glBlendFunc(GL_ONE, GL_ONE);
-        glBlendEquation(GL_FUNC_ADD);
+        glViewport(0, 0, kFramebufferWidth, kFramebufferHeight);
         glDisable(GL_DEPTH_TEST);
-        glEnable(GL_CULL_FACE);
-        glCullFace(GL_BACK);
+        glDisable(GL_BLEND);
+        glDisable(GL_CULL_FACE);
 
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        // Bind G-buffer textures
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, framebuffer.position);
         glActiveTexture(GL_TEXTURE1);
@@ -296,35 +285,33 @@ void Scene::Render(void)
         glActiveTexture(GL_TEXTURE3);
         glBindTexture(GL_TEXTURE_2D, framebuffer.material);
 
-        auto sphere_matrix = glm::translate(glm::mat4(1.0f), light_instances[0].position);
-
         blinnphong->use();
-        blinnphong->setMat4("view_proj", view_proj);
-        blinnphong->setVec3("camera_position", camera.position);
-        blinnphong->setMat4("model", sphere_matrix);
-
         blinnphong->setInt("g_position", 0);
         blinnphong->setInt("g_normal", 1);
         blinnphong->setInt("g_albedo", 2);
         blinnphong->setInt("g_material", 3);
+        blinnphong->setVec3("camera_position", camera.position);
 
-        //draw 
-        blinnphong->setVec3("light.position", light_instances[0].position);
-        blinnphong->setVec3("light.color", light_instances[0].color);
+        const int MAX_LIGHTS = 300;
+        int num_lights = std::min((int)light_instances.size(), MAX_LIGHTS);
+        blinnphong->setInt("num_lights", num_lights);
 
+        for (int i = 0; i < num_lights; ++i) {
+            std::string base = "lights[" + std::to_string(i) + "]";
+            blinnphong->setVec3(base + ".position", glm::vec3(light_instances[i].position));
+            blinnphong->setVec3(base + ".color", light_control.color * light_control.intensity);
+        }
 
-        //render spheres
-        sphere.draw();
-
-        
+        glBindVertexArray(fullscreen_quad.vao);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glBindVertexArray(0);
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    { // render fullscreen quad
+    {
         noprocess->use();
         noprocess->setInt("screen", 0);
 
-        //set up the fullscreen pipeline
         glDisable(GL_BLEND);
         glDisable(GL_DEPTH_TEST);
         glEnable(GL_CULL_FACE);
@@ -333,44 +320,43 @@ void Scene::Render(void)
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        //draw the fullscreen quad
         glBindVertexArray(fullscreen_quad.vao);
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, framebuffer.position);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
 
+        glBindTexture(GL_TEXTURE_2D, lightvolumebuffer.color);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glBindVertexArray(0);
+
+        
         glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer.fbo);
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
         glBlitFramebuffer(0, 0, kFramebufferWidth, kFramebufferHeight,
-                  0, 0, kFramebufferWidth, kFramebufferHeight,
-                  GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+                          0, 0, kFramebufferWidth, kFramebufferHeight,
+                          GL_DEPTH_BUFFER_BIT, GL_NEAREST);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
-    { // render light sources
+    {
         lightsphere->use();
-        //enable depth test
+        lightsphere->setMat4("view_proj", view_proj);
+
         glEnable(GL_DEPTH_TEST);
         glDisable(GL_BLEND);
         glDisable(GL_CULL_FACE);
 
-        
-        //render all lights
-        //loop through and draw spheres
         auto i = 0;
         for (auto x = -debug.width; x <= debug.width; x++)
         {
             for (auto y = -debug.width; y <= debug.width; y++, i++)
             {
-                auto sphere_matrix = glm::translate(glm::mat4(1.0f), light_instances[i].position);
+                auto sphere_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(light_instances[i].position));
+                sphere_matrix = glm::scale(sphere_matrix, glm::vec3(0.1f));
                 lightsphere->setMat4("model", sphere_matrix);
-                lightsphere->setVec3("light.position", light_instances[i].position);
+                lightsphere->setVec3("light.position", glm::vec3(light_instances[i].position));
                 lightsphere->setVec3("light.color", light_instances[i].color);
                 sphere.draw();
             }
         }
-
-
     }
 }
 
@@ -392,6 +378,9 @@ void Scene::Debug(void)
     {
         ImGui::Checkbox("Draw Volumes", &debug.draw_light_volume);
         ImGui::SliderFloat("Light Radisu", &debug.light_radius, 1.0f, 100.0f);
+
+        ImGui::ColorEdit3("Light Color", &light_control.color.x, ImGuiColorEditFlags_Float | ImGuiColorEditFlags_HDR);
+        ImGui::SliderFloat("Intensity", &light_control.intensity, 0.0f, 10.0f);
     }
 
     if (ImGui::CollapsingHeader("Material"))

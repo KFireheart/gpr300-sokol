@@ -24,9 +24,8 @@ uniform Material material;
 
 void main()
 {
-    vec3 object_color = vs_normal.rgb * 0.5 + 0.5;
-    frag_position = vec4(vs_position.xyz, 1.0);
-    frag_normal = vec4(vs_normal.xyz, 1.0);
-    frag_albedo = vec4(object_color, 1.0);
+    frag_position = vec4(vs_position, 1.0);
+    frag_normal   = vec4(normalize(vs_normal), 1.0);
+    frag_albedo   = vec4(0.8, 0.8, 0.8, 1.0);
     frag_material = vec4(material.ambient, material.diffuse, material.specular, material.shininess);
 }
