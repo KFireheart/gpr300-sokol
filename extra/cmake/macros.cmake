@@ -61,6 +61,10 @@ endmacro()
 macro(add_assignment target sources)
   add_executable(${target} ${sources} ../boilerplate.cpp)
 
+  if (APPLE)
+    target_compile_definitions(${target} PRIVATE GL_SILENCE_DEPRECATION)
+  endif()
+
   # link all libraries
   target_link_libraries(${target} PRIVATE assimp)
   target_link_libraries(${target} PRIVATE batteries)

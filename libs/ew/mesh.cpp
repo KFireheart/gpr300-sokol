@@ -8,11 +8,11 @@
 #include "batteries/opengl.h"
 
 namespace ew {
-	Mesh::Mesh(const MeshData& meshData)
+	Mesh::Mesh(const MeshData& meshData, bool instanced)
 	{
-		load(meshData);
+		load(meshData, instanced);
 	}
-	void Mesh::load(const MeshData& meshData)
+	void Mesh::load(const MeshData& meshData, bool instanced)
 	{
 		if (!m_initialized) {
 			glGenVertexArrays(1, &m_vao);
@@ -39,6 +39,8 @@ namespace ew {
 			m_initialized = true;
 		}
 
+		// Per-instance mat4 (locations 3–6) must be configured with the instance buffer bound — see bindInstanceBuffer().
+
 		glBindVertexArray(m_vao);
 		glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ebo);
@@ -56,14 +58,41 @@ namespace ew {
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	}
-	void Mesh::draw(ew::DrawMode drawMode) const
+
+	void Mesh::bindInstanceBuffer(unsigned int instanceVbo) const
+	{
+		glBindVertexArray(m_vao);
+		glBindBuffer(GL_ARRAY_BUFFER, instanceVbo);
+		glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (const void*)(0 * sizeof(glm::vec4)));
+		glEnableVertexAttribArray(3);
+		glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (const void*)(1 * sizeof(glm::vec4)));
+		glEnableVertexAttribArray(4);
+		glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (const void*)(2 * sizeof(glm::vec4)));
+		glEnableVertexAttribArray(5);
+		glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (const void*)(3 * sizeof(glm::vec4)));
+		glEnableVertexAttribArray(6);
+		glVertexAttribDivisor(3, 1);
+		glVertexAttribDivisor(4, 1);
+		glVertexAttribDivisor(5, 1);
+		glVertexAttribDivisor(6, 1);
+		glBindVertexArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
+
+	void Mesh::draw(ew::DrawMode drawMode, int count) const
 	{
 		glBindVertexArray(m_vao);
 		switch (drawMode)
 		{
 		case DrawMode::TRIANGLES:
-			glDrawElements(GL_TRIANGLES, m_numIndices, GL_UNSIGNED_INT, NULL);
+		{
+			if (count > 1) {
+				glDrawElementsInstanced(GL_TRIANGLES, m_numIndices, GL_UNSIGNED_INT, NULL, count);
+			} else {
+				glDrawElements(GL_TRIANGLES, m_numIndices, GL_UNSIGNED_INT, NULL);
+			}
 			break;
+		}
 		case DrawMode::POINTS:
 			glDrawArrays(GL_POINTS, 0, m_numVertices);
 			break;

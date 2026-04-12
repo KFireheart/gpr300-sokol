@@ -3,6 +3,7 @@
     "astro-build.astro-vscode",
     "ms-vscode.cmake-tools",
     "ms-vscode.cpptools",
+    "vadimcn.vscode-lldb",
     "ms-vscode.live-server"
   ]
 }

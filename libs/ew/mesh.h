@@ -27,9 +27,11 @@ namespace ew {
 	class Mesh {
 	public:
 		Mesh() {};
-		Mesh(const MeshData& meshData);
-		void load(const MeshData& meshData);
-		void draw(DrawMode drawMode = DrawMode::TRIANGLES)const;
+		Mesh(const MeshData& meshData, bool instanced = false);
+		void load(const MeshData& meshData, bool instanced = false);
+		/// Bind per-instance `glm::mat4` columns to attributes 3–6. Call once after creating the instance VBO.
+		void bindInstanceBuffer(unsigned int instanceVbo) const;
+		void draw(DrawMode drawMode = DrawMode::TRIANGLES, int count = 1)const;
 		inline int getNumVertices()const { return m_numVertices; }
 		inline int getNumIndices()const { return m_numIndices; }
 	private:

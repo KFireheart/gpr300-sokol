@@ -1,6 +1,10 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
 
 project(gpr300)
+
+if (APPLE)
+  add_compile_definitions(GL_SILENCE_DEPRECATION)
+endif()
 
 set(THIRDPARTY_DIR libs)
 set(ASSIGNMENTS_DIR assignments)

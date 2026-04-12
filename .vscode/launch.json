@@ -1,6 +1,7 @@
 {
     "version": "0.2.0",
     "configurations": [
+      
       {
         "name": "Launch (Web)",
         "type": "chrome",
@@ -18,6 +19,7 @@
         "request": "launch",
         "program": "${command:cmake.launchTargetPath}",
         "cwd": "${workspaceFolder}",
+        "MIMode": "lldb",
         "presentation": {
           "hidden": false,
           "group": "desktop"
